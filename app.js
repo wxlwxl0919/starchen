@@ -1115,3 +1115,89 @@ document.addEventListener('visibilitychange',()=>{
   else if(document.querySelector('.tab.active')?.dataset.tab==='english'){ startStudyTimer(); }
 });
 window.addEventListener('beforeunload',stopStudyTimer);
+
+// ---------- 每日提醒：晚 9 点检查未完成任务和英语学习 ----------
+const REMIND_KEY = 'starchen_reminded_date';
+function checkDailyReminder(){
+  const now = new Date();
+  const hour = now.getHours();
+  // 只在 21:00 - 23:59 之间检查
+  if(hour < 21) return;
+  // 每天只提醒一次
+  const today = todayKey();
+  if(localStorage.getItem(REMIND_KEY) === today) return;
+
+  const todayDate = getEffectiveDate();
+  // 检查今日计划完成情况
+  const todays = db.tasks.filter(t => t.date === todayDate);
+  const incompleteTasks = todays.filter(t => !t.done);
+  // 检查英语学习时间
+  const studyMins = getTodayStudyMinutes();
+  const studyNotEnough = studyMins < 30;
+
+  let messages = [];
+  if(incompleteTasks.length > 0){
+    messages.push(`📋 今日还有 ${incompleteTasks.length} 个计划未完成`);
+  }
+  if(studyNotEnough){
+    messages.push(`📖 英语学习仅 ${studyMins} 分钟（目标 30 分钟）`);
+  }
+
+  if(messages.length > 0){
+    // 标记今天已提醒
+    localStorage.setItem(REMIND_KEY, today);
+    // 弹出提醒
+    showReminderModal(messages);
+  }
+}
+
+function showReminderModal(messages){
+  // 如果已有提醒弹窗，不重复弹
+  if(document.getElementById('reminderModal')) return;
+  const modal = document.createElement('div');
+  modal.id = 'reminderModal';
+  modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;';
+  const box = document.createElement('div');
+  box.style.cssText = 'background:var(--surface,#1a1a2e);border-radius:16px;padding:28px 24px;max-width:340px;width:100%;text-align:center;border:1px solid rgba(91,157,255,0.3);box-shadow:0 0 30px rgba(91,157,255,0.15);';
+  const title = document.createElement('div');
+  title.style.cssText = 'font-size:20px;font-weight:bold;color:#5b9dff;margin-bottom:16px;';
+  title.textContent = '⏰ 每日提醒';
+  const subtitle = document.createElement('div');
+  subtitle.style.cssText = 'font-size:14px;color:#888;margin-bottom:20px;';
+  subtitle.textContent = '今天还有些事情没做完哦~';
+  const list = document.createElement('div');
+  list.style.cssText = 'margin-bottom:24px;';
+  messages.forEach(m => {
+    const item = document.createElement('div');
+    item.style.cssText = 'font-size:16px;color:#e0e0e0;margin-bottom:12px;line-height:1.6;';
+    item.textContent = m;
+    list.appendChild(item);
+  });
+  const quote = document.createElement('div');
+  quote.style.cssText = 'font-size:13px;color:#5b9dff;margin-bottom:20px;font-style:italic;';
+  quote.textContent = '完成比完美重要，先做了再说 ✨';
+  const btnRow = document.createElement('div');
+  btnRow.style.cssText = 'display:flex;gap:12px;';
+  const btnGo = document.createElement('button');
+  btnGo.style.cssText = 'flex:1;padding:12px;border:none;border-radius:10px;background:#5b9dff;color:#fff;font-size:15px;font-weight:bold;cursor:pointer;';
+  btnGo.textContent = '去完成';
+  btnGo.onclick = () => { modal.remove(); switchTab('tasks'); };
+  const btnLater = document.createElement('button');
+  btnLater.style.cssText = 'flex:1;padding:12px;border:none;border-radius:10px;background:rgba(255,255,255,0.1);color:#888;font-size:15px;cursor:pointer;';
+  btnLater.textContent = '明天再说';
+  btnLater.onclick = () => modal.remove();
+  btnRow.appendChild(btnGo);
+  btnRow.appendChild(btnLater);
+  box.appendChild(title);
+  box.appendChild(subtitle);
+  box.appendChild(list);
+  box.appendChild(quote);
+  box.appendChild(btnRow);
+  modal.appendChild(box);
+  document.body.appendChild(modal);
+}
+
+// 每 5 分钟检查一次
+setInterval(checkDailyReminder, 5 * 60 * 1000);
+// 打开 App 时也检查一次（延迟 10 秒，等数据加载完）
+setTimeout(checkDailyReminder, 10000);
