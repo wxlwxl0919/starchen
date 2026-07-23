@@ -67,17 +67,7 @@ function renderCover(){
   const q=QUOTES[idx];
   $('coverQuote').innerHTML=`<div class="q-text">${q.t}</div><span class="q-author">${q.a}</span>`;
   renderGlobalQuote();
-  // 快速统计
-  const today=todayKey(), mkey=monthKey();
-  const tTasks=db.tasks.filter(t=>t.date===today);
-  const tDone=tTasks.filter(t=>t.done).length;
-  const streak=calcStreak();
-  const mExp=db.spends.filter(s=>s.month===mkey&&s.type==='expense').reduce((a,s)=>a+s.amount,0);
-  $('coverStats').innerHTML=`
-    <div class="cover-stat">计划 <b>${tDone}/${tTasks.length}</b></div>
-    <div class="cover-stat">英语 <b>${streak}</b> 天</div>
-    <div class="cover-stat">本月支出 <b>¥${mExp.toFixed(0)}</b></div>
-  `;
+  // 封面统计已按用户要求隐藏，跳过
 }
 function renderGlobalQuote(){
   const idx=parseInt(localStorage.getItem('starchen_quote_idx'))||0;
