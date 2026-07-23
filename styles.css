@@ -691,3 +691,28 @@ body{
   .add-form{flex-direction:column}
   .add-form input,.add-form select,.add-form button{width:100%}
 }
+
+/* ---------- 运动 30 分模块 ---------- */
+.ex-content{display:flex;flex-direction:column;gap:12px;margin-bottom:20px}
+.ex-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;cursor:pointer;transition:border-color .2s}
+.ex-card:hover{border-color:var(--primary)}
+.ex-card-head{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.ex-icon{font-size:28px}
+.ex-name{font-size:17px;font-weight:bold;color:var(--text);flex:1}
+.ex-target{font-size:12px;color:var(--accent);background:rgba(127,209,174,.12);padding:3px 10px;border-radius:20px;white-space:nowrap}
+.ex-desc{font-size:14px;color:var(--text-dim);line-height:1.5;margin:0 0 6px 0}
+.ex-tips{font-size:13px;color:var(--primary);line-height:1.5;margin:0 0 8px 0;opacity:.85}
+.ex-quick-btn{width:100%;padding:8px;background:rgba(91,157,255,.1);border:1px solid rgba(91,157,255,.3);border-radius:8px;color:var(--primary);font-size:14px;cursor:pointer;margin-top:4px}
+.ex-quick-btn:hover{background:rgba(91,157,255,.2)}
+.ex-list{list-style:none;padding:0;margin:12px 0}
+.ex-item{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--surface);border-radius:10px;margin-bottom:8px;border-left:3px solid var(--accent);flex-wrap:wrap}
+.ex-item-type{font-weight:bold;color:var(--text);font-size:15px;min-width:80px}
+.ex-item-dur{color:var(--accent);font-weight:bold;font-size:15px}
+.ex-item-note{color:var(--text-dim);font-size:13px;flex:1}
+.ex-item-time{color:var(--text-dim);font-size:12px;margin-left:auto}
+.ex-del{background:none;border:none;color:var(--danger);cursor:pointer;font-size:16px;padding:4px 8px;border-radius:6px}
+.ex-del:hover{background:rgba(255,107,107,.15)}
+.ex-history{margin-top:8px}
+.ex-hist-group{background:var(--surface);border-radius:10px;padding:12px;margin-bottom:10px}
+.ex-hist-date{font-size:14px;font-weight:bold;color:var(--primary);margin-bottom:6px}
+.ex-hist-item{font-size:14px;color:var(--text-dim);padding:3px 0;line-height:1.5}

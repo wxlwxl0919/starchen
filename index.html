@@ -31,6 +31,7 @@
   <button class="tab" data-tab="english">📖 每日英语</button>
   <button class="tab" data-tab="finance">💰 收支记账</button>
   <button class="tab" data-tab="viral">🔥 爆款发现</button>
+  <button class="tab" data-tab="exercise">🏃 运动 30 分</button>
   <button class="tab" data-tab="overview">📊 综合概览</button>
 </nav>
 
@@ -346,6 +347,59 @@
 
     <ul id="viralList" class="viral-list"></ul>
     <div class="empty-hint" id="viralEmpty">还没记录爆款，看到好内容就来记一条 ✨</div>
+  </section>
+
+  <!-- 运动 30 分 -->
+  <section id="exercise" class="panel">
+    <div class="panel-head">
+      <h2>🏃 运动 30 分</h2>
+      <div class="quick-stats">
+        <span class="stat-pill" id="exTodayMin">今日 0 分钟</span>
+        <span class="stat-pill" id="exWeekMin">本周 0 分钟</span>
+        <span class="stat-pill" id="exStreak">连续 0 天</span>
+      </div>
+    </div>
+
+    <!-- 运动分类标签 -->
+    <div class="eng-tabs">
+      <button class="et-tab active" data-ex="outdoor">🚶 户外运动</button>
+      <button class="et-tab" data-ex="indoor">🏠 室内运动</button>
+      <button class="et-tab" data-ex="office">💼 办公室微运动</button>
+    </div>
+
+    <!-- 运动项目列表 -->
+    <div id="exContent" class="ex-content"></div>
+
+    <!-- 今日运动记录 -->
+    <form id="exForm" class="add-form">
+      <select id="exType" required>
+        <option value="走路">🚶 走路</option>
+        <option value="跑步">🏃 跑步</option>
+        <option value="跳绳">🪢 跳绳</option>
+        <option value="平板支撑">💪 平板支撑</option>
+        <option value="深蹲">🦵 深蹲</option>
+        <option value="开合跳">🤸 开合跳</option>
+        <option value="拉伸">🧘 拉伸</option>
+        <option value="办公室微运动">💼 办公室微运动</option>
+        <option value="其他">📌 其他</option>
+      </select>
+      <input type="number" id="exDuration" placeholder="分钟" min="1" required>
+      <input type="text" id="exNote" placeholder="备注（可选）" maxlength="40">
+      <button type="submit">+ 记录</button>
+    </form>
+
+    <ul id="exList" class="ex-list"></ul>
+    <div class="empty-hint" id="exEmpty">今天还没运动，动起来吧 💪</div>
+
+    <details class="history">
+      <summary>运动历史记录</summary>
+      <div id="exHistory" class="ex-history"></div>
+    </details>
+
+    <details class="history">
+      <summary>本周运动统计</summary>
+      <canvas id="exChart" width="320" height="200"></canvas>
+    </details>
   </section>
 
   <!-- 综合概览 -->

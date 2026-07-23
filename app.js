@@ -1082,7 +1082,7 @@ $('importFile').addEventListener('change',e=>{
 
 // ---------- 通用 ----------
 function escapeHtml(s){ return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
-function renderAll(){ renderDate(); renderTasks(); renderEnglish(); renderFinance(); renderViral(); renderOverview(); renderQuickButtons(); renderCover(); setApiUrl(); fetchInbox(); }
+function renderAll(){ renderDate(); renderTasks(); renderEnglish(); renderFinance(); renderViral(); renderExerciseAll(); renderOverview(); renderQuickButtons(); renderCover(); setApiUrl(); fetchInbox(); }
 fillPlatformSelect('expense');
 renderAll();
 // 检测是否有自动备份可恢复
@@ -1201,3 +1201,244 @@ function showReminderModal(messages){
 setInterval(checkDailyReminder, 5 * 60 * 1000);
 // 打开 App 时也检查一次（延迟 10 秒，等数据加载完）
 setTimeout(checkDailyReminder, 10000);
+
+// ---------- 运动 30 分模块 ----------
+const EXERCISE_BANK = {
+  outdoor: [
+    { icon:'🚶', name:'快走', desc:'最简单的有氧运动，饭后 30 分钟快走，燃脂又助消化', tips:'保持微微出汗的节奏，步频比平时快 30%', target:'30 分钟' },
+    { icon:'🏃', name:'慢跑', desc:'全身有氧运动，提升心肺功能，适合早晨或傍晚', tips:'鼻吸口呼，从 15 分钟开始循序渐进', target:'20-30 分钟' },
+    { icon:'🪢', name:'跳绳', desc:'高效燃脂，10 分钟跳绳 ≈ 30 分钟慢跑的热量消耗', tips:'前脚掌着地，膝盖微曲，分组跳（100个/组）', target:'10-15 分钟' },
+    { icon:'🚴', name:'骑行', desc:'低冲击有氧，锻炼腿部同时保护膝盖', tips:'调整好座椅高度，保持匀速呼吸', target:'30 分钟' },
+    { icon:'🧗', name:'爬楼梯', desc:'零成本燃脂，比平地走路消耗多 50%', tips:'一次两阶效果更好，下楼坐电梯保护膝盖', target:'15-20 分钟' },
+  ],
+  indoor: [
+    { icon:'💪', name:'平板支撑', desc:'核心力量训练，锻炼腹肌、腰背稳定性', tips:'身体成一条直线，腹部收紧，从 30 秒开始', target:'3 组 × 60 秒' },
+    { icon:'🦵', name:'深蹲', desc:'练腿和臀部，全身肌肉参与度最高的动作', tips:'膝盖不超过脚尖，背部挺直，慢下慢上', target:'3 组 × 15 个' },
+    { icon:'🤸', name:'开合跳', desc:'全身热身+燃脂，室内零器械', tips:'手脚协调，保持节奏，适合 HIIT 间歇', target:'3 组 × 30 个' },
+    { icon:'🧘', name:'瑜伽拉伸', desc:'放松身心，改善体态，缓解久坐疲劳', tips:'深呼吸配合动作，不要勉强，感受拉伸感', target:'15-20 分钟' },
+    { icon:'🏋️', name:'俯卧撑', desc:'锻炼胸肌、手臂、核心，随时随地能做', tips:'身体成直线，慢下快上，做不了标准的可以先跪姿', target:'3 组 × 10 个' },
+    { icon:'🦵', name:'高抬腿', desc:'快速提升心率，燃脂效率极高', tips:'膝盖抬到腰部高度，前脚掌着地', target:'3 组 × 30 秒' },
+  ],
+  office: [
+    { icon:'🪑', name:'坐姿转体', desc:'坐在椅子上扭腰，活动腰椎，不引人注目', tips:'双脚踩地，腰背挺直，左右各转 10 次', target:'2 分钟' },
+    { icon:'🦶', name:'踮脚尖', desc:'坐着或站着都行，促进腿部血液循环', tips:'慢慢踮起慢慢放下，感受小腿收缩', target:'3 组 × 20 个' },
+    { icon:'💆', name:'颈肩拉伸', desc:'缓解看电脑的颈肩僵硬，办公室必备', tips:'头部缓慢左右倾斜，每侧停留 15 秒', target:'3 分钟' },
+    { icon:'🪑', name:'椅子上抬腿', desc:'坐着练腹肌，同事完全看不出来', tips:'双腿并拢缓慢抬起，停 2 秒再放下', target:'3 组 × 12 个' },
+    { icon:'🤲', name:'手腕脚踝绕环', desc:'预防鼠标手和久坐水肿，隐蔽又有效', tips:'缓慢绕环，各方向 10 圈', target:'2 分钟' },
+    { icon:'🧘', name:'靠墙静蹲', desc:'悄悄锻炼腿部力量，保护膝盖', tips:'背靠墙，大腿与地面平行，从 30 秒开始', target:'3 组 × 45 秒' },
+    { icon:'👀', name:'眼球操', desc:'缓解眼疲劳，每 20 分钟看 20 米外 20 秒', tips:'上下左右各转 5 圈，远眺 20 秒', target:'1 分钟' },
+    { icon:'🫁', name:'腹式呼吸', desc:'坐着就能做，减压+锻炼核心', tips:'吸气鼓肚子，呼气收肚子，缓慢深呼吸', target:'2 分钟' },
+  ],
+};
+
+// 初始化运动数据
+if(!db.exercises) db.exercises = [];
+let currentExTab = 'outdoor';
+
+function renderExerciseBank(){
+  const container = $('exContent');
+  if(!container) return;
+  const items = EXERCISE_BANK[currentExTab] || [];
+  container.innerHTML = items.map((ex, i) => `
+    <div class="ex-card" onclick="quickAddExercise('${ex.name}')">
+      <div class="ex-card-head">
+        <span class="ex-icon">${ex.icon}</span>
+        <span class="ex-name">${ex.name}</span>
+        <span class="ex-target">${ex.target}</span>
+      </div>
+      <p class="ex-desc">${ex.desc}</p>
+      <p class="ex-tips">💡 ${ex.tips}</p>
+      <button class="ex-quick-btn">+ 记录这项</button>
+    </div>
+  `).join('');
+}
+
+function quickAddExercise(name){
+  $('exType').value = name;
+  $('exDuration').focus();
+  toast(`已选择「${name}」，填写分钟数`);
+}
+
+function renderExerciseList(){
+  const today = todayKey();
+  const todayEx = db.exercises.filter(e => e.date === today).sort((a,b) => b.createdAt - a.createdAt);
+  const list = $('exList');
+  const empty = $('exEmpty');
+  if(todayEx.length === 0){
+    list.innerHTML = '';
+    empty.style.display = '';
+  } else {
+    empty.style.display = 'none';
+    list.innerHTML = todayEx.map(e => `
+      <li class="ex-item">
+        <span class="ex-item-type">${e.type}</span>
+        <span class="ex-item-dur">${e.duration} 分钟</span>
+        ${e.note ? `<span class="ex-item-note">${escapeHtml(e.note)}</span>` : ''}
+        <span class="ex-item-time">${e.time}</span>
+        <button class="ex-del" onclick="delExercise('${e.id}')">✕</button>
+      </li>
+    `).join('');
+  }
+  // 今日运动时长
+  const todayMin = todayEx.reduce((s,e) => s + e.duration, 0);
+  $('exTodayMin').textContent = `今日 ${todayMin} 分钟`;
+  // 本周运动时长
+  const now = new Date();
+  const weekStart = new Date(now);
+  weekStart.setDate(now.getDate() - now.getDay());
+  weekStart.setHours(0,0,0,0);
+  const weekMin = db.exercises.filter(e => new Date(e.date) >= weekStart).reduce((s,e) => s + e.duration, 0);
+  $('exWeekMin').textContent = `本周 ${weekMin} 分钟`;
+  // 连续运动天数
+  let streak = 0;
+  for(let i = 0; i < 365; i++){
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    const ds = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    if(db.exercises.some(e => e.date === ds)) streak++;
+    else if(i > 0) break;
+  }
+  $('exStreak').textContent = `连续 ${streak} 天`;
+}
+
+function renderExerciseHistory(){
+  const container = $('exHistory');
+  if(!container) return;
+  const groups = {};
+  db.exercises.forEach(e => {
+    if(!groups[e.date]) groups[e.date] = [];
+    groups[e.date].push(e);
+  });
+  const dates = Object.keys(groups).sort().reverse().slice(0, 14);
+  if(dates.length === 0){
+    container.innerHTML = '<p style="color:var(--muted);text-align:center;padding:12px;">暂无历史记录</p>';
+    return;
+  }
+  container.innerHTML = dates.map(date => {
+    const items = groups[date];
+    const total = items.reduce((s,e) => s + e.duration, 0);
+    const d = new Date(date);
+    const weekDay = ['日','一','二','三','四','五','六'][d.getDay()];
+    return `
+      <div class="ex-hist-group">
+        <div class="ex-hist-date">${date} 周${weekDay} · 共 ${total} 分钟</div>
+        ${items.map(e => `<div class="ex-hist-item">${e.type} ${e.duration}分钟 ${e.note ? '· '+escapeHtml(e.note) : ''}</div>`).join('')}
+      </div>
+    `;
+  }).join('');
+}
+
+function renderExerciseChart(){
+  const canvas = $('exChart');
+  if(!canvas) return;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  const days = [];
+  const now = new Date();
+  for(let i = 6; i >= 0; i--){
+    const d = new Date(now);
+    d.setDate(d.getDate() - i);
+    const ds = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    const total = db.exercises.filter(e => e.date === ds).reduce((s,e) => s + e.duration, 0);
+    days.push({ date: ds, label: String(d.getDate()), total });
+  }
+  const maxVal = Math.max(30, ...days.map(d => d.total));
+  const barW = 36;
+  const gap = (canvas.width - barW * 7) / 8;
+  const chartH = canvas.height - 40;
+  days.forEach((d, i) => {
+    const x = gap + i * (barW + gap);
+    const h = d.total > 0 ? Math.max(4, (d.total / maxVal) * chartH) : 0;
+    const y = chartH - h + 10;
+    // 柱子
+    if(d.total > 0){
+      const grad = ctx.createLinearGradient(0, y, 0, y + h);
+      grad.addColorStop(0, '#5b9dff');
+      grad.addColorStop(1, '#7c3aed');
+      ctx.fillStyle = grad;
+    } else {
+      ctx.fillStyle = 'rgba(255,255,255,0.05)';
+    }
+    ctx.fillRect(x, y, barW, Math.max(h, 2));
+    // 30 分钟目标线
+    ctx.strokeStyle = 'rgba(0, 184, 148, 0.3)';
+    ctx.setLineDash([4, 4]);
+    const targetY = chartH - (30 / maxVal) * chartH + 10;
+    ctx.beginPath();
+    ctx.moveTo(gap, targetY);
+    ctx.lineTo(canvas.width - gap, targetY);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    // 数值
+    if(d.total > 0){
+      ctx.fillStyle = '#e0e0e0';
+      ctx.font = '12px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(d.total + '', x + barW / 2, y - 4);
+    }
+    // 日期
+    ctx.fillStyle = 'var(--muted,#888)';
+    ctx.fillStyle = '#888';
+    ctx.font = '11px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(d.label, x + barW / 2, canvas.height - 8);
+  });
+  // 标题
+  ctx.fillStyle = '#5b9dff';
+  ctx.font = 'bold 13px sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillText('最近 7 天运动时长（分钟）', 10, 16);
+  ctx.fillStyle = '#00b894';
+  ctx.textAlign = 'right';
+  ctx.fillText('--- 30 分钟目标', canvas.width - 10, 16);
+}
+
+function delExercise(id){
+  db.exercises = db.exercises.filter(e => e.id !== id);
+  save(db);
+  renderExerciseList();
+  renderExerciseHistory();
+  renderExerciseChart();
+}
+
+// 运动分类切换
+document.addEventListener('click', (e) => {
+  if(e.target.classList.contains('et-tab') && e.target.dataset.ex){
+    document.querySelectorAll('[data-ex]').forEach(b => b.classList.remove('active'));
+    e.target.classList.add('active');
+    currentExTab = e.target.dataset.ex;
+    renderExerciseBank();
+  }
+});
+
+// 运动记录表单
+document.addEventListener('submit', (e) => {
+  if(e.target.id === 'exForm'){
+    e.preventDefault();
+    const type = $('exType').value;
+    const duration = parseInt($('exDuration').value);
+    const note = $('exNote').value.trim();
+    if(!duration || duration < 1) return;
+    db.exercises.push({
+      id: uid(),
+      type, duration, note,
+      date: todayKey(),
+      time: nowTime(),
+      createdAt: Date.now(),
+    });
+    save(db);
+    $('exDuration').value = '';
+    $('exNote').value = '';
+    renderExerciseList();
+    renderExerciseHistory();
+    renderExerciseChart();
+    toast(`✅ 已记录 ${type} ${duration} 分钟`);
+  }
+});
+
+function renderExerciseAll(){
+  renderExerciseBank();
+  renderExerciseList();
+  renderExerciseHistory();
+  renderExerciseChart();
+}
