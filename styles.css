@@ -470,16 +470,19 @@ body{
 }
 .cover-date{color:var(--text-dim);font-size:15px;margin-bottom:30px}
 .cover-quote{
-  max-width:500px;padding:20px 24px;
+  max-width:500px;width:90%;padding:24px 28px;
   background:var(--surface);border:1px solid var(--border);
   border-radius:16px;margin-bottom:24px;position:relative;
+  display:block !important;visibility:visible !important;
+  opacity:1 !important;
 }
 .cover-quote::before{
   content:'"';position:absolute;top:-8px;left:14px;
   font-size:48px;color:var(--primary);opacity:.3;font-family:serif;
 }
 .cover-quote .q-text{
-  font-size:17px;line-height:1.8;color:var(--text);font-weight:500;
+  font-size:17px;line-height:1.8;color:var(--text) !important;font-weight:500;
+  display:block !important;
 }
 .cover-quote .q-author{
   display:block;margin-top:10px;font-size:13px;color:var(--text-dim);
