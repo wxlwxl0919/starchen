@@ -63,14 +63,16 @@ function renderCover(){
   const d=new Date();
   const wk=['日','一','二','三','四','五','六'][d.getDay()];
   $('coverDate').textContent=`${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日 · 星期${wk}`;
-  const idx = parseInt(localStorage.getItem('starchen_quote_idx')) || (d.getDate()%QUOTES.length);
+  // 每天自动根据日期选金句（不再受手动换句影响）
+  const idx = d.getDate() % QUOTES.length;
   const q=QUOTES[idx];
   $('coverQuote').innerHTML=`<div class="q-text">${q.t}</div><span class="q-author">${q.a}</span>`;
   renderGlobalQuote();
   // 封面统计已按用户要求隐藏，跳过
 }
 function renderGlobalQuote(){
-  const idx=parseInt(localStorage.getItem('starchen_quote_idx'))||0;
+  const d=new Date();
+  const idx=d.getDate()%QUOTES.length;
   const q=QUOTES[idx]||QUOTES[0];
   const gt=document.getElementById('gqText');
   const ga=document.getElementById('gqAuthor');
@@ -78,12 +80,17 @@ function renderGlobalQuote(){
   if(ga) ga.textContent=q.a;
 }
 function refreshQuote(){
-  const cur=parseInt(localStorage.getItem('starchen_quote_idx'))||0;
-  const next=(cur+1)%QUOTES.length;
-  localStorage.setItem('starchen_quote_idx',next);
-  const q=QUOTES[next];
+  // 临时随机换一句（不影响每天自动选择）
+  const d=new Date();
+  const autoIdx=d.getDate()%QUOTES.length;
+  const randomIdx=(autoIdx+1+Math.floor(Math.random()*(QUOTES.length-1)))%QUOTES.length;
+  const q=QUOTES[randomIdx];
   $('coverQuote').innerHTML=`<div class="q-text">${q.t}</div><span class="q-author">${q.a}</span>`;
-  renderGlobalQuote();
+  // 全局条也换
+  const gt=document.getElementById('gqText');
+  const ga=document.getElementById('gqAuthor');
+  if(gt) gt.textContent=q.t;
+  if(ga) ga.textContent=q.a;
 }
 // 换一句（封面按钮 + 全局按钮共用）
 document.querySelector('.cover-next-quote').addEventListener('click',refreshQuote);
